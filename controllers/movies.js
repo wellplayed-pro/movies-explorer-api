@@ -51,8 +51,7 @@ const getMovies = (req, res, next) => {
 
 
 const deleteMovieById = (req, res, next) => {
-  console.log(req.params.movieId);
-  Movie.findById({movieId: req.params.movieId})
+  Movie.findOne({movieId: req.params.movieId})
     .orFail(() => new ErrorNotFound('Карточка для удаления не найдена'))
     .then((movie) => {
       if (movie.owner.toString() === req.user._id) {
