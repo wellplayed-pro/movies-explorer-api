@@ -26,7 +26,7 @@ const limiter = rateLimit({
 app.use(limiter);
 
 app.use(cors({
-  origin: ['http://localhost:3000', 'https://ambernetdiploma.nomoreparties.co', 'http://ambernetdiploma.nomoreparties.co'],
+  origin: ['http://localhost:3000', 'https://ambernetdiploma.nomoreparties.co', 'http://ambernet15pr.nomoredomains.xyz'],
   credentials: true,
 }));
 

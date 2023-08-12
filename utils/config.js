@@ -8,7 +8,7 @@ const {
 } = process.env;
 
 const DEV_JWT_SECRET = 'SECRETSECRETSECRET';
-const DEV_DB_HOST = 'mongodb://localhost:27017/diplomabd';
+const DEV_DB_HOST = 'mongodb://127.0.0.1:27017/diplomabd';
 const DEV_PORT = 3000;
 
 const DB = NODE_ENV === 'production' && DB_HOST ? DB_HOST : DEV_DB_HOST;
