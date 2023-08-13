@@ -8,36 +8,46 @@ const ErrorValidation = require('../errors/errorValidation');
 const ErrorDefault = require('../errors/errorDefault');
 const ErrorNotFound = require('../errors/errorNotFound');
 const { SECRET_STRING } = require('../utils/config');
+const {
+  BAD_DATA_MESSAGE,
+  USER_CONFLICT_EMAIL_MESSAGE,
+  USER_NOT_FOUND_MESSAGE,
+  USER_LOGOUT_MESSAGE,
+  SERVER_ERROR_MESSAGE,
+  USER_WRONG_AUTH_MESSAGE,
+} = require('../errors/typical_errors');
 
 const createUser = (req, res, next) => {
   const {
-    name, about, avatar, email, password,
+    name, email, password,
   } = req.body;
   bcrypt.hash(password, 10)
     .then((hashedPassword) => User.create({
-      name, about, avatar, email, password: hashedPassword,
+      name, email, password: hashedPassword,
     }))
     .then((user) => res.send(user.toJSON()))
     .catch((error) => {
       if (error.name === 'ValidationError') {
-        next(new ErrorValidation('Переданы некорректные данные'));
+        next(new ErrorValidation(BAD_DATA_MESSAGE));
       } else if (error.code === 11000) {
-        next(new ErrorConflict('Пользователь с таким email уже существует'));
+        next(new ErrorConflict(USER_CONFLICT_EMAIL_MESSAGE));
       }
       next(error);
     });
 };
 
 const updateProfileUser = (req, res, next) => {
-  const { name, about } = req.body;
+  const { name, email } = req.body;
   const { _id } = req.user;
-  User.findByIdAndUpdate(_id, { name, about }, { new: true, runValidators: true })
+  User.findByIdAndUpdate(_id, { name, email }, { new: true, runValidators: true })
     .then((user) => res.send(user))
     .catch((error) => {
       if (error.name === 'ValidationError') {
-        next(new ErrorValidation('Переданы некорректные данные'));
+        next(new ErrorValidation(BAD_DATA_MESSAGE));
+      } else if (error.code === 11000) {
+        next(new ErrorConflict(USER_CONFLICT_EMAIL_MESSAGE));
       } else {
-        next(new ErrorDefault('На сервере произошла ошибка'));
+        next(new ErrorDefault(SERVER_ERROR_MESSAGE));
       }
     });
 };
@@ -46,7 +56,7 @@ const login = (req, res, next) => {
   const { email, password } = req.body;
   User.findOne({ email })
     .select('+password')
-    .orFail(() => new ErrorAuth('Пользователь не найден'))
+    .orFail(() => new ErrorAuth(USER_NOT_FOUND_MESSAGE))
     .then((user) => {
       bcrypt.compare(password, user.password)
         .then((isValidUser) => {
@@ -59,7 +69,7 @@ const login = (req, res, next) => {
             });
             res.send(user);
           } else {
-            throw new ErrorAuth('Неправильный пароль');
+            throw new ErrorAuth(USER_WRONG_AUTH_MESSAGE);
           }
         })
         .catch(next);
@@ -67,9 +77,13 @@ const login = (req, res, next) => {
     .catch(next);
 };
 
+const logout = (req, res) => {
+  res.clearCookie('jwt').send({ message: USER_LOGOUT_MESSAGE });
+};
+
 const getUserInfo = (req, res, next) => {
   User.findById(req.user._id)
-    .orFail(new ErrorNotFound('Пользователь с указанным id не существует'))
+    .orFail(new ErrorNotFound(USER_NOT_FOUND_MESSAGE))
     .then((user) => res.send(user))
     .catch((error) => next(error));
 };
@@ -79,4 +93,5 @@ module.exports = {
   updateProfileUser,
   login,
   getUserInfo,
+  logout,
 };
